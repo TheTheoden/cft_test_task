@@ -9,9 +9,7 @@ typedef struct StatData {
   unsigned int mode : 3;
 } StatData;
 
-int cmp(const void *a, const void *b);
-
-void StoreDump(const StatData *data, int count, char *path);
+int StoreDump(const StatData *data, int count, char *path);
 
 StatData *LoadDump(char *path, int *out_count);
 

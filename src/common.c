@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int cmp(const void *a, const void *b) {
+int cmp_id(const void *a, const void *b) {
   long id1 = ((StatData *)a)->id;
   long id2 = ((StatData *)b)->id;
   if (id1 > id2)
@@ -12,20 +12,33 @@ int cmp(const void *a, const void *b) {
   return 0;
 }
 
-void StoreDump(const StatData *data, int count, char *path) {
+int cmp_cost(const void *a, const void *b) {
+  float cost1 = ((StatData *)a)->cost;
+  float cost2 = ((StatData *)b)->cost;
+  if (cost1 > cost2)
+    return 1;
+  if (cost1 < cost2)
+    return -1;
+  return 0;
+}
+
+/* returns 0 on success, 1 otherwise */
+int StoreDump(const StatData *data, int count, char *path) {
   FILE *f = fopen(path, "wb");
 
   if (!f) {
     fprintf(stderr, "Can't open %s\n", path);
-    return;
+    return 1;
   }
 
   fwrite(&count, sizeof(int), 1, f);
   fwrite(data, sizeof(StatData), count, f);
 
   fclose(f);
+  return 0;
 }
 
+/* returns StatData array on success, NULL otherwise */
 StatData *LoadDump(char *path, int *out_count) {
   int count;
 
@@ -50,8 +63,11 @@ StatData *LoadDump(char *path, int *out_count) {
   return data;
 }
 
-void SortDump(StatData *data, int n) { qsort(data, n, sizeof(StatData), cmp); }
+void SortDump(StatData *data, int n) {
+  qsort(data, n, sizeof(StatData), cmp_cost);
+}
 
+/* StatData array on success, NULL otherwise */
 StatData *JoinDump(StatData *left, int n, StatData *right, int m,
                    int *out_size) {
   int total = n + m;
@@ -66,8 +82,7 @@ StatData *JoinDump(StatData *left, int n, StatData *right, int m,
     temp[n + i] = right[i];
   }
 
-  SortDump(temp, total);
-
+  qsort(temp, total, sizeof(StatData), cmp_id);
   int write = 0;
 
   for (int read = 0; read < total; read++) {
@@ -113,6 +128,7 @@ void PrintData(const StatData data) {
   printf("\n");
 }
 
+/* returns 1 if two instances have equal fields, 0 otherwise */
 int CompareData(const StatData a, const StatData b) {
   if (a.cost != b.cost)
     return 0;

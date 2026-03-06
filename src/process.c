@@ -4,51 +4,65 @@
 
 int main(int argc, char *argv[]) {
   if (argc < 4) {
-    fprintf(stderr, "The functions takes 3 arguments.\n");
+    fprintf(stderr, "3 arguments required\n");
     return 1;
   }
 
-  char *path_in1 = argv[1];
-  char *path_in2 = argv[2];
+  StatData *a_in = NULL;
+  StatData *b_in = NULL;
+  StatData *out = NULL;
+  int a_size = 0;
+  int b_size = 0;
+  int out_size = 0;
+
+  char *path_a_in = argv[1];
+  char *path_b_in = argv[2];
   char *path_out = argv[3];
 
-  int a_cnt;
-  StatData *a = LoadDump(path_in1, &a_cnt);
+  a_in = LoadDump(path_a_in, &a_size);
 
-  if (!a) {
-    fprintf(stderr, "Can't load %s\n", path_in1);
-    return 1;
+  if (!a_in) {
+    fprintf(stderr, "can't load %s\n", path_a_in);
+    goto ERROR;
   }
 
-  int b_cnt;
-  StatData *b = LoadDump(path_in2, &b_cnt);
+  b_in = LoadDump(path_b_in, &b_size);
 
-  if (!b) {
-    free(a);
-    fprintf(stderr, "Can't load %s\n", path_in2);
-    return 1;
+  if (!b_in) {
+    fprintf(stderr, "can't load %s\n", path_b_in);
+    goto ERROR;
   }
 
-  int c_cnt;
-  StatData *c = JoinDump(a, a_cnt, b, b_cnt, &c_cnt);
+  out = JoinDump(a_in, a_size, b_in, b_size, &out_size);
 
-  if (!c) {
-    free(a);
-    free(b);
-    fprintf(stderr, "Error while doing JoinDump\n");
-    return 1;
+  if (!out) {
+    fprintf(stderr, "JoinDump() failed\n");
+    goto ERROR;
   }
 
-  SortDump(c, c_cnt); /* Not necessary */
+  SortDump(out, out_size);
 
-  for (int i = 0; i < 10 && i < c_cnt; i++) {
-    PrintData(c[i]);
+  for (int i = 0; i < 10 && i < out_size; i++) {
+    PrintData(out[i]);
   }
 
-  StoreDump(c, c_cnt, path_out);
+  int status = StoreDump(out, out_size, path_out);
+  if (status != 0) {
+    fprintf(stderr, "StoreDump() failed\n");
+    goto ERROR;
+  }
 
-  free(a);
-  free(b);
-  free(c);
+  free(a_in);
+  free(b_in);
+  free(out);
   return 0;
+
+ERROR:
+  if (a_in)
+    free(a_in);
+  if (b_in)
+    free(b_in);
+  if (out)
+    free(out);
+  return 1;
 }
