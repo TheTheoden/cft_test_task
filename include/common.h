@@ -9,6 +9,8 @@ typedef struct StatData {
   unsigned int mode : 3;
 } StatData;
 
+enum Field { EQ, ID, COUNT, COST, PRIMARY, MODE };
+
 int StoreDump(const StatData *data, int count, char *path);
 
 StatData *LoadDump(char *path, int *out_count);

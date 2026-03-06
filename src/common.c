@@ -128,17 +128,17 @@ void PrintData(const StatData data) {
   printf("\n");
 }
 
-/* returns 1 if two instances have equal fields, 0 otherwise */
+/* returns 0 if equal, enum of the first unequal field otherwise */
 int CompareData(const StatData a, const StatData b) {
   if (a.cost != b.cost)
-    return 0;
+    return COST;
   if (a.count != b.count)
-    return 0;
+    return COUNT;
   if (a.id != b.id)
-    return 0;
+    return ID;
   if (a.mode != b.mode)
-    return 0;
+    return MODE;
   if (a.primary != b.primary)
-    return 0;
-  return 1;
+    return PRIMARY;
+  return EQ;
 }
