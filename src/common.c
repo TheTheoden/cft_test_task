@@ -22,7 +22,7 @@ int cmp_cost(const void *a, const void *b) {
   return 0;
 }
 
-/* returns 0 on success, 1 otherwise */
+/* 0 on success, 1 otherwise */
 int StoreDump(const StatData *data, int count, char *path) {
   FILE *f = fopen(path, "wb");
 
@@ -38,7 +38,7 @@ int StoreDump(const StatData *data, int count, char *path) {
   return 0;
 }
 
-/* returns StatData array on success, NULL otherwise */
+/* StatData array on success, NULL otherwise */
 StatData *LoadDump(char *path, int *out_count) {
   int count;
 
@@ -52,8 +52,10 @@ StatData *LoadDump(char *path, int *out_count) {
 
   StatData *data = malloc(count * sizeof(StatData));
 
-  if (!data)
+  if (!data) {
+    fclose(f);
     return NULL;
+  }
 
   fread(data, sizeof(StatData), count, f);
 
@@ -123,12 +125,12 @@ void PrintBinaryMode(unsigned int x) {
 
 void PrintData(const StatData data) {
   printf("%lx | %d | %.3e | ", data.id, data.count, data.cost);
-  printf(data.primary ? "y |" : "n | ");
+  printf(data.primary ? "y | " : "n | ");
   PrintBinaryMode(data.mode);
   printf("\n");
 }
 
-/* returns 0 if equal, enum of the first unequal field otherwise */
+/* 0 if equal, enum of the first unequal field otherwise */
 int CompareData(const StatData a, const StatData b) {
   if (a.cost != b.cost)
     return COST;

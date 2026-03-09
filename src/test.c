@@ -12,14 +12,12 @@
   RunTest(test_id, data_a, NELEMS(data_a), data_b, NELEMS(data_b), data_c,     \
           NELEMS(data_c))
 
-/* Содержимое для исходных файлов */
 const StatData case_1_in_a[2] = {
     {.id = 90889, .count = 13, .cost = 3.567, .primary = 0, .mode = 3},
     {.id = 90089, .count = 1, .cost = 88.90, .primary = 1, .mode = 0}};
 const StatData case_1_in_b[2] = {
     {.id = 90089, .count = 13, .cost = 0.011, .primary = 0, .mode = 2},
     {.id = 90189, .count = 1000, .cost = 1.00003, .primary = 1, .mode = 2}};
-/* Ожидаемый результат обработки */
 const StatData case_1_out[3] = {
     {.id = 90189, .count = 1000, .cost = 1.00003, .primary = 1, .mode = 2},
     {.id = 90889, .count = 13, .cost = 3.567, .primary = 0, .mode = 3},
@@ -50,6 +48,51 @@ const StatData case_3_in_b[1] = {
     {.id = 90001, .count = 10, .cost = 2, .primary = 1, .mode = 2}};
 const StatData case_3_out[1] = {
     {.id = 90001, .count = 55, .cost = 46, .primary = 0, .mode = 5}};
+
+const StatData case_4_in_a[1] = {
+    {.id = 90067, .count = 1, .cost = 1, .primary = 1, .mode = 1}};
+const StatData case_4_in_b[1] = {
+    {.id = 90068, .count = 2, .cost = 2, .primary = 1, .mode = 2}};
+const StatData case_4_out[2] = {
+    {.id = 90067, .count = 1, .cost = 1, .primary = 1, .mode = 1},
+    {.id = 90068, .count = 2, .cost = 2, .primary = 1, .mode = 2}};
+
+const StatData case_5_in_a[1] = {
+    {.id = 90067, .count = 1, .cost = 10, .primary = 1, .mode = 1}};
+const StatData case_5_in_b[1] = {
+    {.id = 90068, .count = 2, .cost = 2, .primary = 1, .mode = 2}};
+const StatData case_5_out[2] = {
+    {.id = 90068, .count = 2, .cost = 2, .primary = 1, .mode = 2},
+    {.id = 90067, .count = 1, .cost = 10, .primary = 1, .mode = 1}};
+
+const StatData case_6_in_a[6] = {
+    {.id = 90067, .count = 1, .cost = 10, .primary = 1, .mode = 1},
+    {.id = 90068, .count = 2, .cost = 9, .primary = 1, .mode = 3},
+    {.id = 90069, .count = 1, .cost = 8, .primary = 1, .mode = 2},
+    {.id = 90070, .count = 2, .cost = 7, .primary = 1, .mode = 1},
+    {.id = 90071, .count = 1, .cost = 6, .primary = 1, .mode = 3},
+    {.id = 90072, .count = 2, .cost = 5, .primary = 1, .mode = 1}};
+const StatData case_6_in_b[1] = {
+    {.id = 90072, .count = 1, .cost = 10, .primary = 0, .mode = 4}};
+const StatData case_6_out[6] = {
+    {.id = 90071, .count = 1, .cost = 6, .primary = 1, .mode = 3},
+    {.id = 90070, .count = 2, .cost = 7, .primary = 1, .mode = 1},
+    {.id = 90069, .count = 1, .cost = 8, .primary = 1, .mode = 2},
+    {.id = 90068, .count = 2, .cost = 9, .primary = 1, .mode = 3},
+    {.id = 90067, .count = 1, .cost = 10, .primary = 1, .mode = 1},
+    {.id = 90072, .count = 3, .cost = 15, .primary = 0, .mode = 4}};
+
+StatData case_7_in_a[MAX_BUFFER_SIZE];
+StatData case_7_in_b[MAX_BUFFER_SIZE];
+StatData case_7_out[MAX_BUFFER_SIZE];
+
+const StatData case_8_in_a[2] = {
+    {.id = 90073, .count = 1, .cost = 7, .primary = 1, .mode = 3},
+    {.id = 90071, .count = 2, .cost = 6, .primary = 0, .mode = 4}};
+const StatData *case_8_in_b = NULL;
+const StatData case_8_out[2] = {
+    {.id = 90071, .count = 2, .cost = 6, .primary = 0, .mode = 4},
+    {.id = 90073, .count = 1, .cost = 7, .primary = 1, .mode = 3}};
 
 int RunProcess(char *path_in_1, char *path_in_2, char *path_out) {
   int pid = fork();
@@ -134,10 +177,29 @@ ERROR:
   return 1;
 }
 
+void CreateMaxTest(StatData *data, int data_size, int is_out) {
+  for (int i = 0; i < data_size; i++) {
+    data[i].id = i + 1e9;
+    data[i].count = is_out ? 2 * i + 2 : i + 1;
+    data[i].cost = is_out ? 2.0 : 1.0;
+    data[i].primary = 0;
+    data[i].mode = (i % 8);
+  }
+}
+
 int main() {
   srand(time(NULL));
   COMPLETE_TEST(1, case_1_in_a, case_1_in_b, case_1_out);
   COMPLETE_TEST(2, case_2_in_a, case_2_in_b, case_2_out);
   COMPLETE_TEST(3, case_3_in_a, case_3_in_b, case_3_out);
+  COMPLETE_TEST(4, case_4_in_a, case_4_in_b, case_4_out);
+  COMPLETE_TEST(5, case_5_in_a, case_5_in_b, case_5_out);
+  COMPLETE_TEST(6, case_6_in_a, case_6_in_b, case_6_out);
+
+  CreateMaxTest(case_7_in_a, MAX_BUFFER_SIZE, 0);
+  CreateMaxTest(case_7_in_b, MAX_BUFFER_SIZE, 0);
+  CreateMaxTest(case_7_out, MAX_BUFFER_SIZE, 1);
+  COMPLETE_TEST(7, case_7_in_a, case_7_in_b, case_7_out);
+  RunTest(8, case_8_in_a, 2, case_8_in_b, 0, case_8_out, 2);
   return 0;
 }

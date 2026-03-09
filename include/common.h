@@ -1,6 +1,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#define MAX_BUFFER_SIZE 100000
+
 typedef struct StatData {
   long id;
   int count;
