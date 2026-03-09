@@ -1,4 +1,5 @@
 #include "common.h"
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -6,11 +7,9 @@
 #include <time.h>
 #include <unistd.h>
 
-#define NELEMS(x) (sizeof(x) / sizeof((x)[0]))
-
 #define COMPLETE_TEST(test_id, data_a, data_b, data_c)                         \
-  RunTest(test_id, data_a, NELEMS(data_a), data_b, NELEMS(data_b), data_c,     \
-          NELEMS(data_c))
+  RunTest(test_id, data_a, ARRAY_SIZE(data_a), data_b, ARRAY_SIZE(data_b),     \
+          data_c, ARRAY_SIZE(data_c))
 
 const StatData case_1_in_a[2] = {
     {.id = 90889, .count = 13, .cost = 3.567, .primary = 0, .mode = 3},
@@ -94,6 +93,27 @@ const StatData case_8_out[2] = {
     {.id = 90071, .count = 2, .cost = 6, .primary = 0, .mode = 4},
     {.id = 90073, .count = 1, .cost = 7, .primary = 1, .mode = 3}};
 
+const StatData case_9_in_a[2] = {
+    {.id = 90889, .count = 13, .cost = 3.567, .primary = 0, .mode = 3},
+    {.id = 90089, .count = 1, .cost = 88.90, .primary = 1, .mode = 0}};
+const StatData case_9_in_b[2] = {
+    {.id = 90089, .count = 13, .cost = 0.011, .primary = 0, .mode = 2},
+    {.id = 90189, .count = 1000, .cost = 1.00003, .primary = 1, .mode = 2}};
+const StatData case_9_out[2] = {
+    {.id = 90189, .count = 1000, .cost = 1.00003, .primary = 1, .mode = 2},
+    {.id = 90889, .count = 13, .cost = 3.567, .primary = 0, .mode = 3}};
+
+const StatData case_10_in_a[2] = {
+    {.id = 90889, .count = 13, .cost = 3.567, .primary = 0, .mode = 3},
+    {.id = 90089, .count = 1, .cost = 88.90, .primary = 1, .mode = 0}};
+const StatData case_10_in_b[2] = {
+    {.id = 90089, .count = 13, .cost = 0.011, .primary = 0, .mode = 2},
+    {.id = 90189, .count = 1000, .cost = 1.00003, .primary = 1, .mode = 2}};
+const StatData case_10_out[3] = {
+    {.id = 90189, .count = 0, .cost = 0, .primary = 0, .mode = 2},
+    {.id = 90889, .count = 0, .cost = 0, .primary = 0, .mode = 3},
+    {.id = 90089, .count = 0, .cost = 0, .primary = 0, .mode = 2}};
+
 int RunProcess(char *path_in_1, char *path_in_2, char *path_out) {
   int pid = fork();
 
@@ -114,13 +134,15 @@ int RunProcess(char *path_in_1, char *path_in_2, char *path_out) {
   return 0;
 }
 
-int RunTest(int test_id, const StatData *a_in, int a_size, const StatData *b_in,
-            int b_size, const StatData *res, int res_size) {
+/* 0 on success, 1 otherwise */
+int RunTest(int test_id, const StatData *a_in, size_t a_size,
+            const StatData *b_in, size_t b_size, const StatData *res,
+            size_t res_size) {
   struct timeval start, end;
   gettimeofday(&start, NULL);
 
   StatData *out = NULL;
-  int out_size = 0;
+  size_t out_size = 0;
 
   char path_a[64];
   char path_b[64];
@@ -131,12 +153,12 @@ int RunTest(int test_id, const StatData *a_in, int a_size, const StatData *b_in,
   sprintf(path_out, "test_data/test_output_%d", test_id);
 
   if (StoreDump(a_in, a_size, path_a) != 0) {
-    fprintf(stderr, "StoreDump failed on first input.\n");
+    fprintf(stderr, "Test #%d: StoreDump failed on first input.\n", test_id);
     goto ERROR;
   }
 
   if (StoreDump(b_in, b_size, path_b) != 0) {
-    fprintf(stderr, "StoreDump failed on second input.\n");
+    fprintf(stderr, "Test #%d: StoreDump failed on second input.\n", test_id);
     goto ERROR;
   }
 
@@ -150,14 +172,14 @@ int RunTest(int test_id, const StatData *a_in, int a_size, const StatData *b_in,
   }
 
   if (out_size != res_size) {
-    fprintf(stderr, "wrong number of instances\n");
+    fprintf(stderr, "Test #%d: wrong number of instances\n", test_id);
     goto ERROR;
   }
 
-  for (int i = 0; i < out_size; i++) {
+  for (size_t i = 0; i < out_size; i++) {
     int result = CompareData(out[i], res[i]);
     if (result != 0) {
-      fprintf(stderr, "field %d doesn't match\n", result);
+      fprintf(stderr, "Test #%d: field %d doesn't match\n", test_id, result);
       goto ERROR;
     }
   }
@@ -177,8 +199,8 @@ ERROR:
   return 1;
 }
 
-void CreateMaxTest(StatData *data, int data_size, int is_out) {
-  for (int i = 0; i < data_size; i++) {
+void CreateMaxTest(StatData *data, size_t data_size, int is_out) {
+  for (size_t i = 0; i < data_size; i++) {
     data[i].id = i + 1e9;
     data[i].count = is_out ? 2 * i + 2 : i + 1;
     data[i].cost = is_out ? 2.0 : 1.0;
@@ -200,6 +222,10 @@ int main() {
   CreateMaxTest(case_7_in_b, MAX_BUFFER_SIZE, 0);
   CreateMaxTest(case_7_out, MAX_BUFFER_SIZE, 1);
   COMPLETE_TEST(7, case_7_in_a, case_7_in_b, case_7_out);
+
   RunTest(8, case_8_in_a, 2, case_8_in_b, 0, case_8_out, 2);
+
+  COMPLETE_TEST(9, case_9_in_a, case_9_in_b, case_9_out);
+  COMPLETE_TEST(10, case_10_in_a, case_10_in_b, case_10_out);
   return 0;
 }

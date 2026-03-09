@@ -1,4 +1,5 @@
 #include "common.h"
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -11,9 +12,9 @@ int main(int argc, char *argv[]) {
   StatData *a_in = NULL;
   StatData *b_in = NULL;
   StatData *out = NULL;
-  int a_size = 0;
-  int b_size = 0;
-  int out_size = 0;
+  size_t a_size = 0;
+  size_t b_size = 0;
+  size_t out_size = 0;
 
   char *path_a_in = argv[1];
   char *path_b_in = argv[2];
@@ -42,7 +43,7 @@ int main(int argc, char *argv[]) {
 
   SortDump(out, out_size);
 
-  for (int i = 0; i < 10 && i < out_size; i++) {
+  for (size_t i = 0; i < 10 && i < out_size; i++) {
     PrintData(out[i]);
   }
 
